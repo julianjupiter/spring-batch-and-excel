@@ -1,21 +1,17 @@
 package io.github.julianjupiter.springbatchandexcel.student;
 
 import io.github.julianjupiter.springbatchandexcel.storage.ExcelUtils;
+import io.github.julianjupiter.springbatchandexcel.storage.Spreadsheet;
 import io.github.julianjupiter.springbatchandexcel.storage.StorageService;
 import org.springframework.batch.item.ItemReader;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.MvcUriComponentsBuilder;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Controller
 @RequestMapping("/students")
@@ -42,8 +38,11 @@ public class StudentController {
     }
 
     @PostMapping("/upload-excel")
-    public String uploadExcel(MultipartFile file, RedirectAttributes redirectAttributes) {
+    public String uploadExcel(MultipartFile file, RedirectAttributes redirectAttributes) throws Exception {
         storageService.store(file);
+        Optional<Spreadsheet> spreadsheetOptional = storageService.setSpreadsheet(file);
+        Spreadsheet spreadsheet = spreadsheetOptional.orElseThrow(() -> new Exception("Spreadsheet is null."));
+        storageService.save(spreadsheet);
         redirectAttributes.addFlashAttribute("message", "You successfully uploaded " + file.getOriginalFilename() + "!");
 
         return "redirect:/students/uploaded-excel";
@@ -51,25 +50,10 @@ public class StudentController {
 
     @GetMapping("/uploaded-excel")
     public String loadUploadedExcels(Model model, @ModelAttribute("message") String message) {
-        model.addAttribute("excels", storageService.loadAll()
-                .map(path -> {
-                    ExcelDto excelDto = new ExcelDto();
-                    excelDto.setFileName(path.getFileName().toString());
-                    excelDto.setUri(MvcUriComponentsBuilder.fromMethodName(StudentController.class, "serveFile", path.getFileName().toString()).build().toString());
-                    return excelDto;
-                })
-                .collect(Collectors.toList()));
+        model.addAttribute("spreadsheets", storageService.findAll());
         model.addAttribute("message", message);
 
         return "student/uploadedExcel";
-    }
-
-    @GetMapping("/uploaded-excel/{filename:.+}")
-    @ResponseBody
-    public ResponseEntity<Resource> serveFile(@PathVariable String filename) {
-        Resource file = storageService.loadAsResource(filename);
-        return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION,
-                "attachment; filename=\"" + file.getFilename() + "\"").body(file);
     }
 
     @PostMapping("/import")
@@ -80,7 +64,6 @@ public class StudentController {
             System.out.println("Student has data.");
             studentService.save(student);
         } else {
-            System.out.println("Student is null");
             throw new Exception("Student is null");
         }
 

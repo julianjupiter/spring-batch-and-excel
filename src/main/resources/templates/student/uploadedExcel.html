@@ -23,18 +23,25 @@
                     <table class="table table-sm table-hover">
                         <thead>
                         <tr>
-                            <th scope="col">Files</th>
+                            <th scope="col">File Name</th>
+                            <th scope="col">Date Uploaded</th>
+                            <th scope="col">Imported</th>
+                            <th scope="col">Date Imported</th>
                             <th scope="col">Action</th>
                         </tr>
                         </thead>
                         <tbody>
-                            <div th:if="!${#lists.isEmpty(excels)}" th:remove="tag">
-                                <tr th:each="excel : ${excels}">
-                                    <th th:text="${excel.uri}"></th>
+                            <div th:if="!${#lists.isEmpty(spreadsheets)}" th:remove="tag">
+                                <tr th:each="spreadsheet : ${spreadsheets}">
+                                    <td th:text="${spreadsheet.name}"></td>
+                                    <td th:text="${spreadsheet.uploadedAt}"></td>
+                                    <td><span class="badge badge-success" th:if="${spreadsheet.importedAt}" th:text="Done"></span></td>
+                                    <td th:text="${spreadsheet.importedAt}"></td>
                                     <td>
                                         <form th:action="@{/students/import}" method="post">
-                                            <input type="hidden" th:value="${excel.fileName}" name="fileName">
-                                            <button type="submit" class="btn btn-primary btn-sm">Import</button>
+                                            <input type="hidden" th:value="${spreadsheet.name}" name="fileName">
+                                            <button type="submit" class="btn btn-primary btn-sm" th:if="${spreadsheet.importedAt == null}" th:text="Import">Iport</button>
+                                            <button type="submit" class="btn btn-primary btn-sm" th:if="${spreadsheet.importedAt}" th:attr="disabled=disabled" th:text="Import">Import</button>
                                         </form>
                                     </td>
                                 </tr>

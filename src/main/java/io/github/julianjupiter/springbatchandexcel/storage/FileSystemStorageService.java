@@ -1,5 +1,7 @@
 package io.github.julianjupiter.springbatchandexcel.storage;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -15,15 +17,23 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 @Service
 public class FileSystemStorageService implements StorageService {
+    private static final Logger LOGGER = LoggerFactory.getLogger(FileSystemStorageService.class);
     private final Path rootLocation;
+    private final SpreadsheetRepository spreadsheetRepository;
 
     @Autowired
-    public FileSystemStorageService(StorageProperties properties) {
+    public FileSystemStorageService(StorageProperties properties, SpreadsheetRepository spreadsheetRepository) {
         this.rootLocation = Paths.get(properties.getLocation());
+        this.spreadsheetRepository = spreadsheetRepository;
     }
 
     @Override
@@ -89,5 +99,35 @@ public class FileSystemStorageService implements StorageService {
     @Override
     public void deleteAll() {
         FileSystemUtils.deleteRecursively(rootLocation.toFile());
+    }
+
+    @Override
+    public void save(Spreadsheet spreadsheet) {
+        spreadsheetRepository.save(spreadsheet);
+    }
+
+    @Override
+    public Optional<Spreadsheet> setSpreadsheet(MultipartFile file) {
+        String fileName = file.getOriginalFilename();
+        try {
+            Resource resource = loadAsResource(fileName);
+            long lastModified = resource.lastModified();
+            LocalDateTime localDateTime = Instant.ofEpochMilli(lastModified).atZone(ZoneId.systemDefault()).toLocalDateTime();
+
+            Spreadsheet spreadsheet = new Spreadsheet();
+            spreadsheet.setName(fileName);
+            spreadsheet.setUploadedAt(localDateTime);
+
+            return Optional.of(spreadsheet);
+        } catch (Exception exception) {
+            LOGGER.error(exception.getMessage());
+        }
+
+        return Optional.empty();
+    }
+
+    @Override
+    public List<Spreadsheet> findAll() {
+        return spreadsheetRepository.findAll();
     }
 }

@@ -21,4 +21,9 @@ public class StudentServiceImpl implements StudentService {
     public void save(Student student) {
         studentRepository.save(student);
     }
+
+    @Override
+    public void saveAll(Iterable<Student> students) {
+        studentRepository.saveAll(students);
+    }
 }

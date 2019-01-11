@@ -11,7 +11,7 @@
             <div class="row">
                 <div class="col-sm-8 offset-sm-2">
                     <h2>Student</h2>
-                    <a th:href="@{/students/upload-excel}" class="btn btn-primary btn-sm mb-2">Add Student by Batch</a>
+                    <a th:href="@{/students/upload-excel}" class="btn btn-primary btn-sm mb-2">Upload Excel</a>
                     <a th:href="@{/students/uploaded-excel}" class="btn btn-primary btn-sm mb-2">Uploaded Excel</a>
                     <div th:if="${!#strings.isEmpty(message)}" th:remove="tag">
                         <div class="alert alert-success alert-dismissible fade show" role="alert">

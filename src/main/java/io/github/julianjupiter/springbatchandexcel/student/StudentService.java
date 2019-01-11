@@ -8,4 +8,6 @@ public interface StudentService {
 
     void save(Student student);
 
+    void saveAll(Iterable<Student> students);
+
 }

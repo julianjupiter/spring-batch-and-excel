@@ -22,10 +22,12 @@ public interface StorageService {
 
     void deleteAll();
 
-    void save(Spreadsheet spreadsheet);
+    void saveSpreadsheet(Spreadsheet spreadsheet);
 
     Optional<Spreadsheet> setSpreadsheet(MultipartFile file);
 
     List<Spreadsheet> findAll();
+
+    Spreadsheet findBySpreadsheetName(String name);
 
 }

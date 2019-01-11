@@ -1,17 +1,19 @@
 package io.github.julianjupiter.springbatchandexcel.student;
 
-import io.github.julianjupiter.springbatchandexcel.storage.ExcelUtils;
+import io.github.julianjupiter.springbatchandexcel.storage.ExcelReader;
 import io.github.julianjupiter.springbatchandexcel.storage.Spreadsheet;
 import io.github.julianjupiter.springbatchandexcel.storage.StorageService;
-import org.springframework.batch.item.ItemReader;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.nio.file.Path;
+import java.time.LocalDateTime;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/students")
@@ -42,7 +44,7 @@ public class StudentController {
         storageService.store(file);
         Optional<Spreadsheet> spreadsheetOptional = storageService.setSpreadsheet(file);
         Spreadsheet spreadsheet = spreadsheetOptional.orElseThrow(() -> new Exception("Spreadsheet is null."));
-        storageService.save(spreadsheet);
+        storageService.saveSpreadsheet(spreadsheet);
         redirectAttributes.addFlashAttribute("message", "You successfully uploaded " + file.getOriginalFilename() + "!");
 
         return "redirect:/students/uploaded-excel";
@@ -58,15 +60,13 @@ public class StudentController {
 
     @PostMapping("/import")
     public String importStudents(@RequestParam String fileName, RedirectAttributes redirectAttributes) throws Exception {
-        ItemReader<Student> studentItemReader = ExcelUtils.excelToItemReader(storageService.load(fileName), Student.class);
-        Student student = studentItemReader.read();
-        if (student != null) {
-            System.out.println("Student has data.");
-            studentService.save(student);
-        } else {
-            throw new Exception("Student is null");
-        }
-
+        Path file = storageService.load(fileName);
+        Resource resource = new FileSystemResource(file);
+        Iterable<Student> students = ExcelReader.read(((FileSystemResource) resource).getPath(), Student.class);
+        Spreadsheet spreadsheet = storageService.findBySpreadsheetName(fileName);
+        spreadsheet.setImportedAt(LocalDateTime.now());
+        studentService.saveAll(students);
+        storageService.saveSpreadsheet(spreadsheet);
         redirectAttributes.addFlashAttribute("message", "You successfully imported students data from " + fileName + "!");
 
         return "redirect:/students";

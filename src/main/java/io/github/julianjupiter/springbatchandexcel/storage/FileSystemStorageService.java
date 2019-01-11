@@ -102,7 +102,7 @@ public class FileSystemStorageService implements StorageService {
     }
 
     @Override
-    public void save(Spreadsheet spreadsheet) {
+    public void saveSpreadsheet(Spreadsheet spreadsheet) {
         spreadsheetRepository.save(spreadsheet);
     }
 
@@ -129,5 +129,10 @@ public class FileSystemStorageService implements StorageService {
     @Override
     public List<Spreadsheet> findAll() {
         return spreadsheetRepository.findAll();
+    }
+
+    @Override
+    public Spreadsheet findBySpreadsheetName(String name) {
+        return spreadsheetRepository.findByName(name);
     }
 }

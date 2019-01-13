@@ -1,6 +1,6 @@
 package io.github.julianjupiter.springbatchandexcel;
 
-import io.github.julianjupiter.springbatchandexcel.storage.StorageProperties;
+import io.github.julianjupiter.springbatchandexcel.storage.FileStorageProperties;
 import io.github.julianjupiter.springbatchandexcel.storage.StorageService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -9,7 +9,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 
 @SpringBootApplication
-@EnableConfigurationProperties(StorageProperties.class)
+@EnableConfigurationProperties(FileStorageProperties.class)
 public class SpringBatchAndExcelApplication {
 
 	public static void main(String[] args) {
